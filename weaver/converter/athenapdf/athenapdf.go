@@ -24,6 +24,8 @@ type AthenaPDF struct {
 	Aggressive bool
 	// WaitForStatus will wait until window.status === WINDOW_STATUS
 	WaitForStatus bool
+	// Extra flags
+	ExtraFlags string
 }
 
 // constructCMD returns a string array containing the AthenaPDF command to be
@@ -47,10 +49,14 @@ func constructCMD(base string, path string, aggressive bool, waitForStatus bool)
 // using athenapdf CLI.
 // See the Convert method for Conversion for more information.
 func (c AthenaPDF) Convert(s converter.ConversionSource, done <-chan struct{}) ([]byte, error) {
-	log.Printf("[AthenaPDF] converting to PDF: %s\n", s.GetActualURI())
-
 	// Construct the command to execute
 	cmd := constructCMD(c.CMD, s.URI, c.Aggressive, c.WaitForStatus)
+	if c.ExtraFlags != "" {
+		cmd = append(cmd, strings.Fields(c.ExtraFlags)...)
+	}
+
+	log.Printf("[AthenaPDF] converting to PDF: %s (using %s)\n", s.GetActualURI(), cmd)
+
 	out, err := gcmd.Execute(cmd, done)
 	if err != nil {
 		return nil, err
